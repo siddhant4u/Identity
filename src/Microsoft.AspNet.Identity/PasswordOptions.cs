@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System.Collections.Generic;
+
 namespace Microsoft.AspNet.Identity
 {
-    public class PasswordOptions
+    public class PasswordOptions<TUser> where TUser : class
     {
         /// <summary>
         ///     Minimum required length
@@ -29,5 +31,10 @@ namespace Microsoft.AspNet.Identity
         ///     Require a digit ('0' - '9')
         /// </summary>
         public bool RequireDigit { get; set; } = true;
+
+        public IPasswordHasher<TUser> Hasher { get; set; } = new PasswordHasher<TUser>();
+
+        public IList<IPasswordValidator<TUser>> Validators { get; } = new List<IPasswordValidator<TUser>>();
+
     }
 }

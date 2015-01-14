@@ -28,7 +28,7 @@ namespace Microsoft.AspNet.Identity
         public ClaimsIdentityFactory(
             UserManager<TUser> userManager, 
             RoleManager<TRole> roleManager, 
-            IOptions<IdentityOptions> optionsAccessor)
+            IOptions<IdentityOptions<TUser>> optionsAccessor)
         {
             if (userManager == null)
             {
@@ -69,7 +69,7 @@ namespace Microsoft.AspNet.Identity
         /// <value>
         /// The current <see cref="IdentityOptions"/> for this factory instance.
         /// </value>
-        public IdentityOptions Options { get; private set; }
+        public IdentityOptions<TUser> Options { get; private set; }
 
         /// <summary>
         /// Creates a populated <see cref="ClaimsIdentity"/> for the specified <paramref name="user"/>.
@@ -87,7 +87,7 @@ namespace Microsoft.AspNet.Identity
             }
             var userId = await UserManager.GetUserIdAsync(user, cancellationToken);
             var userName = await UserManager.GetUserNameAsync(user, cancellationToken);
-            var id = new ClaimsIdentity(IdentityOptions.ApplicationCookieAuthenticationType, Options.ClaimsIdentity.UserNameClaimType,
+            var id = new ClaimsIdentity(IdentityAuthenticationTypes.ApplicationCookieAuthenticationType, Options.ClaimsIdentity.UserNameClaimType,
                 Options.ClaimsIdentity.RoleClaimType);
             id.AddClaim(new Claim(Options.ClaimsIdentity.UserIdClaimType, userId));
             id.AddClaim(new Claim(Options.ClaimsIdentity.UserNameClaimType, userName, ClaimValueTypes.String));

@@ -31,5 +31,6 @@ namespace Microsoft.AspNet.Identity
 
         // for unit testing
         internal RandomNumberGenerator Rng { get; set; } = _defaultRng;
+
     }
 }

@@ -12,7 +12,7 @@ namespace Microsoft.Framework.DependencyInjection
 {
     public static class IdentityServiceCollectionExtensions
     {
-        public static IServiceCollection ConfigureIdentity(this IServiceCollection services, Action<IdentityOptions> configure)
+        public static IServiceCollection ConfigureIdentity<TUser>(this IServiceCollection services, Action<IdentityOptions<TUser>> configure) where TUser : class
         {
             return services.Configure(configure);
         }
@@ -25,7 +25,7 @@ namespace Microsoft.Framework.DependencyInjection
         public static IdentityBuilder AddIdentity(
             this IServiceCollection services, 
             IConfiguration identityConfig = null,
-            Action<IdentityOptions> configureOptions = null,
+            Action<IdentityOptions<IdentityUser>> configureOptions = null,
             bool useDefaultSubKey = true)
         {
             return services.AddIdentity<IdentityUser, IdentityRole>(identityConfig, configureOptions, useDefaultSubKey);
@@ -34,7 +34,7 @@ namespace Microsoft.Framework.DependencyInjection
         public static IdentityBuilder AddIdentity<TUser, TRole>(
             this IServiceCollection services, 
             IConfiguration identityConfig = null, 
-            Action<IdentityOptions> configureOptions = null, 
+            Action<IdentityOptions<TUser>> configureOptions = null, 
             bool useDefaultSubKey = true)
             where TUser : class
             where TRole : class
@@ -45,7 +45,7 @@ namespace Microsoft.Framework.DependencyInjection
                 {
                     identityConfig = identityConfig.GetSubKey("identity");
                 }
-                services.Configure<IdentityOptions>(identityConfig);
+                services.Configure<IdentityOptions<TUser>>(identityConfig);
             }
             var describe = new ServiceDescriber(identityConfig);
 
@@ -73,39 +73,39 @@ namespace Microsoft.Framework.DependencyInjection
             }
             services.Configure<ExternalAuthenticationOptions>(options =>
             {
-                options.SignInAsAuthenticationType = IdentityOptions.ExternalCookieAuthenticationType;
+                options.SignInAsAuthenticationType = IdentityAuthenticationTypes.ExternalCookieAuthenticationType;
             });
 
             // Configure all of the cookie middlewares
             services.Configure<CookieAuthenticationOptions>(options =>
             {
-                options.AuthenticationType = IdentityOptions.ApplicationCookieAuthenticationType;
+                options.AuthenticationType = IdentityAuthenticationTypes.ApplicationCookieAuthenticationType;
                 options.LoginPath = new PathString("/Account/Login");
                 options.Notifications = new CookieAuthenticationNotifications
                 {
-                    OnValidateIdentity = SecurityStampValidator.ValidateIdentityAsync
+                    OnValidateIdentity = SecurityStampValidator.ValidateIdentityAsync<TUser>
                 };
-            }, IdentityOptions.ApplicationCookieAuthenticationType);
+            }, IdentityAuthenticationTypes.ApplicationCookieAuthenticationType);
             services.Configure<CookieAuthenticationOptions>(options =>
             {
-                options.AuthenticationType = IdentityOptions.ExternalCookieAuthenticationType;
+                options.AuthenticationType = IdentityAuthenticationTypes.ExternalCookieAuthenticationType;
                 options.AuthenticationMode = AuthenticationMode.Passive;
-                options.CookieName = IdentityOptions.ExternalCookieAuthenticationType;
+                options.CookieName = IdentityAuthenticationTypes.ExternalCookieAuthenticationType;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-            }, IdentityOptions.ExternalCookieAuthenticationType);
+            }, IdentityAuthenticationTypes.ExternalCookieAuthenticationType);
             services.Configure<CookieAuthenticationOptions>(options =>
             {
-                options.AuthenticationType = IdentityOptions.TwoFactorRememberMeCookieAuthenticationType;
+                options.AuthenticationType = IdentityAuthenticationTypes.TwoFactorRememberMeCookieAuthenticationType;
                 options.AuthenticationMode = AuthenticationMode.Passive;
-                options.CookieName = IdentityOptions.TwoFactorRememberMeCookieAuthenticationType;
-            }, IdentityOptions.TwoFactorRememberMeCookieAuthenticationType);
+                options.CookieName = IdentityAuthenticationTypes.TwoFactorRememberMeCookieAuthenticationType;
+            }, IdentityAuthenticationTypes.TwoFactorRememberMeCookieAuthenticationType);
             services.Configure<CookieAuthenticationOptions>(options =>
             {
-                options.AuthenticationType = IdentityOptions.TwoFactorUserIdCookieAuthenticationType;
+                options.AuthenticationType = IdentityAuthenticationTypes.TwoFactorUserIdCookieAuthenticationType;
                 options.AuthenticationMode = AuthenticationMode.Passive;
-                options.CookieName = IdentityOptions.TwoFactorUserIdCookieAuthenticationType;
+                options.CookieName = IdentityAuthenticationTypes.TwoFactorUserIdCookieAuthenticationType;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-            }, IdentityOptions.TwoFactorUserIdCookieAuthenticationType);
+            }, IdentityAuthenticationTypes.TwoFactorUserIdCookieAuthenticationType);
 
             return new IdentityBuilder(typeof(TUser), typeof(TRole), services);
         }

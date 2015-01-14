@@ -48,7 +48,7 @@ namespace Microsoft.AspNet.Identity
     /// </summary>
     public static class SecurityStampValidator
     {
-        public static Task ValidateIdentityAsync(CookieValidateIdentityContext context)
+        public static Task ValidateIdentityAsync<TUser>(CookieValidateIdentityContext context) where TUser : class
         {
             var currentUtc = DateTimeOffset.UtcNow;
             if (context.Options != null && context.Options.SystemClock != null)
@@ -67,7 +67,7 @@ namespace Microsoft.AspNet.Identity
             if (issuedUtc != null)
             {
                 var timeElapsed = currentUtc.Subtract(issuedUtc.Value);
-                var accessor = context.HttpContext.RequestServices.GetRequiredService<IOptions<IdentityOptions>>();
+                var accessor = context.HttpContext.RequestServices.GetRequiredService<IOptions<IdentityOptions<TUser>>>();
                 validate = timeElapsed > accessor.Options.SecurityStampValidationInterval;
             }
             if (validate)

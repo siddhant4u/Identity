@@ -26,28 +26,17 @@ namespace Microsoft.AspNet.Identity
 
         private TimeSpan _defaultLockout = TimeSpan.Zero;
         private bool _disposed;
-        private IPasswordHasher<TUser> _passwordHasher;
-        private IdentityOptions _options;
+        private IdentityOptions<TUser> _options;
 
         /// <summary>
         ///     Constructor
         /// </summary>
         /// <param name="store"></param>
         /// <param name="optionsAccessor"></param>
-        /// <param name="passwordHasher"></param>
-        /// <param name="userValidators"></param>
-        /// <param name="passwordValidators"></param>
-        /// <param name="keyNormalizer"></param>
-        /// <param name="errors"></param>
         /// <param name="tokenProviders"></param>
         /// <param name="msgProviders"></param>
         public UserManager(IUserStore<TUser> store, 
-            IOptions<IdentityOptions> optionsAccessor = null,
-            IPasswordHasher<TUser> passwordHasher = null, 
-            IEnumerable<IUserValidator<TUser>> userValidators = null,
-            IEnumerable<IPasswordValidator<TUser>> passwordValidators = null, 
-            ILookupNormalizer keyNormalizer = null,
-            IdentityErrorDescriber errors = null,
+            IOptions<IdentityOptions<TUser>> optionsAccessor = null,
             IEnumerable<IUserTokenProvider<TUser>> tokenProviders = null, 
             IEnumerable<IIdentityMessageProvider> msgProviders = null)
         {
@@ -56,24 +45,7 @@ namespace Microsoft.AspNet.Identity
                 throw new ArgumentNullException(nameof(store));
             }
             Store = store;
-            Options = optionsAccessor?.Options ?? new IdentityOptions();
-            PasswordHasher = passwordHasher ?? new PasswordHasher<TUser>();
-            KeyNormalizer = keyNormalizer ?? new UpperInvariantLookupNormalizer();
-            ErrorDescriber = errors ?? new IdentityErrorDescriber();
-            if (userValidators != null)
-            {
-                foreach (var v in userValidators)
-                {
-                    UserValidators.Add(v);
-                }
-            }
-            if (passwordValidators != null)
-            {
-                foreach (var v in passwordValidators)
-                {
-                    PasswordValidators.Add(v);
-                }
-            }
+            Options = optionsAccessor?.Options ?? new IdentityOptions<TUser>();
             if (tokenProviders != null)
             {
                 foreach (var tokenProvider in tokenProviders)
@@ -100,45 +72,29 @@ namespace Microsoft.AspNet.Identity
         /// <summary>
         ///     Used to hash/verify passwords
         /// </summary>
-        public IPasswordHasher<TUser> PasswordHasher
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return _passwordHasher;
-            }
-            set
-            {
-                ThrowIfDisposed();
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                _passwordHasher = value;
-            }
-        }
+        private IPasswordHasher<TUser> PasswordHasher { get { return Options.Password.Hasher; } }
 
         /// <summary>
         ///     Used to validate users before persisting changes
         /// </summary>
-        public IList<IUserValidator<TUser>> UserValidators { get; } = new List<IUserValidator<TUser>>();
+        private IList<IUserValidator<TUser>> UserValidators { get { return Options.User.Validators; } }
 
         /// <summary>
         ///     Used to validate passwords before persisting changes
         /// </summary>
-        public IList<IPasswordValidator<TUser>> PasswordValidators { get; } = new List<IPasswordValidator<TUser>>();
+        private IList<IPasswordValidator<TUser>> PasswordValidators { get { return Options.Password.Validators; } }
 
         /// <summary>
         ///     Used to normalize user names and emails for uniqueness
         /// </summary>
-        public ILookupNormalizer KeyNormalizer { get; set; }
+        private ILookupNormalizer KeyNormalizer { get { return Options.KeyNormalizer; } }
 
         /// <summary>
         ///     Used to generate public API error messages
         /// </summary>
-        public IdentityErrorDescriber ErrorDescriber { get; set; }
+        private IdentityErrorDescriber ErrorDescriber { get { return Options.ErrorDescriber; } }
 
-        public IdentityOptions Options
+        public IdentityOptions<TUser> Options
         {
             get
             {

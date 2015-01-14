@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Security;
-using Microsoft.AspNet.Security.Cookies;
 using System;
 
 namespace Microsoft.AspNet.Identity
@@ -11,13 +8,13 @@ namespace Microsoft.AspNet.Identity
     /// <summary>
     ///     Configuration for identity
     /// </summary>
-    public class IdentityOptions
+    public class IdentityOptions<TUser> where TUser : class
     {
         public ClaimsIdentityOptions ClaimsIdentity { get; set; } = new ClaimsIdentityOptions();
 
-        public UserOptions User { get; set; } = new UserOptions();
+        public UserOptions<TUser> User { get; set; } = new UserOptions<TUser>();
 
-        public PasswordOptions Password { get; set; } = new PasswordOptions();
+        public PasswordOptions<TUser> Password { get; set; } = new PasswordOptions<TUser>();
 
         public LockoutOptions Lockout { get; set; } = new LockoutOptions();
 
@@ -31,9 +28,20 @@ namespace Microsoft.AspNet.Identity
 
         public string ChangeEmailTokenProvider { get; set; } = Resources.DefaultTokenProvider;
 
-        public static string ApplicationCookieAuthenticationType { get; set; } = typeof(IdentityOptions).Namespace + ".Application";
-        public static string ExternalCookieAuthenticationType { get; set; } = typeof(IdentityOptions).Namespace + ".External";
-        public static string TwoFactorUserIdCookieAuthenticationType { get; set; } = typeof(IdentityOptions).Namespace + ".TwoFactorUserId";
-        public static string TwoFactorRememberMeCookieAuthenticationType { get; set; } = typeof(IdentityOptions).Namespace + ".TwoFactorRemeberMe";
+        /// <summary>
+        ///     Used to normalize user names and emails for uniqueness
+        /// </summary>
+        public ILookupNormalizer KeyNormalizer { get; set; } = new UpperInvariantLookupNormalizer();
+
+        /// <summary>
+        ///     Used to generate public API error messages
+        /// </summary>
+        public IdentityErrorDescriber ErrorDescriber { get; set; } = new IdentityErrorDescriber();
+
+
+        public static string ApplicationCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".Application";
+        public static string ExternalCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".External";
+        public static string TwoFactorUserIdCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".TwoFactorUserId";
+        public static string TwoFactorRememberMeCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".TwoFactorRemeberMe";
     }
 }

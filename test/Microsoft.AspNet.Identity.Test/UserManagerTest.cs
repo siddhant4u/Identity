@@ -31,7 +31,6 @@ namespace Microsoft.AspNet.Identity.Test
                     .AddTransient<TestManager>();
             services.AddIdentity<TestUser, IdentityRole>();
             var manager = services.BuildServiceProvider().GetRequiredService<TestManager>();
-            Assert.NotNull(manager.PasswordHasher);
             Assert.NotNull(manager.StorePublic);
             Assert.NotNull(manager.Options);
         }
@@ -195,7 +194,7 @@ namespace Microsoft.AspNet.Identity.Test
             var user = new TestUser {UserName="Foo"};
             store.Setup(s => s.FindByNameAsync(user.UserName, CancellationToken.None)).Returns(Task.FromResult(user)).Verifiable();
             var userManager = MockHelpers.TestUserManager(store.Object);
-            userManager.KeyNormalizer = null;
+            userManager.Options.KeyNormalizer = null;
 
             // Act
             var result = await userManager.FindByNameAsync(user.UserName);
@@ -230,7 +229,7 @@ namespace Microsoft.AspNet.Identity.Test
             var user = new TestUser { Email = "Foo" };
             store.Setup(s => s.FindByEmailAsync(user.Email, CancellationToken.None)).Returns(Task.FromResult(user)).Verifiable();
             var userManager = MockHelpers.TestUserManager(store.Object);
-            userManager.KeyNormalizer = null;
+            userManager.Options.KeyNormalizer = null;
 
             // Act
             var result = await userManager.FindByEmailAsync(user.Email);
@@ -432,7 +431,7 @@ namespace Microsoft.AspNet.Identity.Test
             hasher.Setup(s => s.VerifyHashedPassword(user, hashed, pwd)).Returns(PasswordVerificationResult.SuccessRehashNeeded).Verifiable();
             hasher.Setup(s => s.HashPassword(user, pwd)).Returns(rehashed).Verifiable();
             var userManager = MockHelpers.TestUserManager(store.Object);
-            userManager.PasswordHasher = hasher.Object;
+            userManager.Options.Password.Hasher = hasher.Object;
 
             // Act
             var result = await userManager.CheckPasswordAsync(user, pwd);
@@ -630,8 +629,8 @@ namespace Microsoft.AspNet.Identity.Test
         {
             // TODO: Can switch to Mock eventually
             var manager = MockHelpers.TestUserManager(new EmptyStore());
-            manager.PasswordValidators.Clear();
-            manager.PasswordValidators.Add(new BadPasswordValidator<TestUser>());
+            manager.Options.Password.Validators.Clear();
+            manager.Options.Password.Validators.Add(new BadPasswordValidator<TestUser>());
             IdentityResultAssert.IsFailure(await manager.CreateAsync(new TestUser(), "password"),
                 BadPasswordValidator<TestUser>.ErrorMessage);
         }
@@ -646,7 +645,6 @@ namespace Microsoft.AspNet.Identity.Test
 
             var manager = new UserManager<TestUser>(store);
 
-            Assert.Throws<ArgumentNullException>("value", () => manager.PasswordHasher = null);
             Assert.Throws<ArgumentNullException>("value", () => manager.Options = null);
             await Assert.ThrowsAsync<ArgumentNullException>("user", async () => await manager.CreateAsync(null));
             await Assert.ThrowsAsync<ArgumentNullException>("user", async () => await manager.CreateAsync(null, null));
@@ -1389,7 +1387,7 @@ namespace Microsoft.AspNet.Identity.Test
                 .Returns(Task.FromResult(user.Email))
                 .Verifiable();
 
-            Assert.Same(describer, manager.ErrorDescriber);
+            Assert.Same(describer, manager.Options.ErrorDescriber);
             IdentityResultAssert.IsFailure(await manager.CreateAsync(user), describer.DuplicateEmail(user.Email));
 
             store.VerifyAll();

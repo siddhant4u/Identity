@@ -19,10 +19,10 @@ namespace Microsoft.AspNet.Identity.Test
         {
             var userManager = MockHelpers.MockUserManager<TestUser>().Object;
             var roleManager = MockHelpers.MockRoleManager<TestRole>().Object;
-            var options = new Mock<IOptions<IdentityOptions>>();
+            var options = new Mock<IOptions<IdentityOptions<TestUser>>>();
             Assert.Throws<ArgumentNullException>("optionsAccessor",
                 () => new ClaimsIdentityFactory<TestUser, TestRole>(userManager, roleManager, options.Object));
-            var identityOptions = new IdentityOptions();
+            var identityOptions = new IdentityOptions<TestUser>();
             options.Setup(a => a.Options).Returns(identityOptions);
             var factory = new ClaimsIdentityFactory<TestUser, TestRole>(userManager, roleManager, options.Object);
             await Assert.ThrowsAsync<ArgumentNullException>("user",
@@ -57,7 +57,7 @@ namespace Microsoft.AspNet.Identity.Test
             {
                 userManager.Setup(m => m.GetClaimsAsync(user, CancellationToken.None)).ReturnsAsync(userClaims);
             }
-            userManager.Object.Options = new IdentityOptions();
+            userManager.Object.Options = new IdentityOptions<TestUser>();
 
             var admin = new TestRole() { Name = "Admin" };
             var local = new TestRole() { Name = "Local" };
@@ -71,8 +71,8 @@ namespace Microsoft.AspNet.Identity.Test
                 roleManager.Setup(m => m.GetClaimsAsync(local, CancellationToken.None)).ReturnsAsync(localClaims);
             }
 
-            var options = new Mock<IOptions<IdentityOptions>>();
-            var identityOptions = new IdentityOptions();
+            var options = new Mock<IOptions<IdentityOptions<TestUser>>>();
+            var identityOptions = new IdentityOptions<TestUser>();
             options.Setup(a => a.Options).Returns(identityOptions);
             var factory = new ClaimsIdentityFactory<TestUser, TestRole>(userManager.Object, roleManager.Object, options.Object);
 
@@ -82,7 +82,7 @@ namespace Microsoft.AspNet.Identity.Test
             // Assert
             var manager = userManager.Object;
             Assert.NotNull(identity);
-            Assert.Equal(IdentityOptions.ApplicationCookieAuthenticationType, identity.AuthenticationType);
+            Assert.Equal(IdentityAuthenticationTypes.ApplicationCookieAuthenticationType, identity.AuthenticationType);
             var claims = identity.Claims.ToList();
             Assert.NotNull(claims);
             Assert.True(
