@@ -146,8 +146,8 @@ namespace Microsoft.AspNet.Identity.Test
         {
             var manager = CreateManager();
             var user = CreateTestUser();
-            manager.Options.User.Validators.Clear();
-            manager.Options.User.Validators.Add(new AlwaysBadValidator());
+            manager.UserValidators.Clear();
+            manager.UserValidators.Add(new AlwaysBadValidator());
             IdentityResultAssert.IsFailure(await manager.CreateAsync(user), AlwaysBadValidator.ErrorMessage);
         }
 
@@ -157,8 +157,8 @@ namespace Microsoft.AspNet.Identity.Test
             var manager = CreateManager();
             var user = CreateTestUser();
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(user));
-            manager.Options.User.Validators.Clear();
-            manager.Options.User.Validators.Add(new AlwaysBadValidator());
+            manager.UserValidators.Clear();
+            manager.UserValidators.Add(new AlwaysBadValidator());
             IdentityResultAssert.IsFailure(await manager.UpdateAsync(user), AlwaysBadValidator.ErrorMessage);
         }
 
@@ -166,9 +166,9 @@ namespace Microsoft.AspNet.Identity.Test
         public async Task CanChainUserValidators()
         {
             var manager = CreateManager();
-            manager.Options.User.Validators.Clear();
-            manager.Options.User.Validators.Add(new AlwaysBadValidator());
-            manager.Options.User.Validators.Add(new AlwaysBadValidator());
+            manager.UserValidators.Clear();
+            manager.UserValidators.Add(new AlwaysBadValidator());
+            manager.UserValidators.Add(new AlwaysBadValidator());
             var result = await manager.CreateAsync(CreateTestUser());
             IdentityResultAssert.IsFailure(result, AlwaysBadValidator.ErrorMessage);
             Assert.Equal(2, result.Errors.Count());
@@ -204,8 +204,8 @@ namespace Microsoft.AspNet.Identity.Test
             var manager = CreateManager();
             var user = CreateTestUser();
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(user));
-            manager.Options.Password.Validators.Clear();
-            manager.Options.Password.Validators.Add(new AlwaysBadValidator());
+            manager.PasswordValidators.Clear();
+            manager.PasswordValidators.Add(new AlwaysBadValidator());
             IdentityResultAssert.IsFailure(await manager.AddPasswordAsync(user, "password"),
                 AlwaysBadValidator.ErrorMessage);
         }
@@ -214,9 +214,9 @@ namespace Microsoft.AspNet.Identity.Test
         public async Task CanChainPasswordValidators()
         {
             var manager = CreateManager();
-            manager.Options.Password.Validators.Clear();
-            manager.Options.Password.Validators.Add(new AlwaysBadValidator());
-            manager.Options.Password.Validators.Add(new AlwaysBadValidator());
+            manager.PasswordValidators.Clear();
+            manager.PasswordValidators.Add(new AlwaysBadValidator());
+            manager.PasswordValidators.Add(new AlwaysBadValidator());
             var user = CreateTestUser();
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(user));
             var result = await manager.AddPasswordAsync(user, "pwd");
@@ -230,8 +230,8 @@ namespace Microsoft.AspNet.Identity.Test
             var manager = CreateManager();
             var user = CreateTestUser();
             IdentityResultAssert.IsSuccess(await manager.CreateAsync(user, "password"));
-            manager.Options.Password.Validators.Clear();
-            manager.Options.Password.Validators.Add(new AlwaysBadValidator());
+            manager.PasswordValidators.Clear();
+            manager.PasswordValidators.Add(new AlwaysBadValidator());
             IdentityResultAssert.IsFailure(await manager.ChangePasswordAsync(user, "password", "new"),
                 AlwaysBadValidator.ErrorMessage);
         }
@@ -627,7 +627,7 @@ namespace Microsoft.AspNet.Identity.Test
             Assert.NotNull(stamp);
             var token = await manager.GeneratePasswordResetTokenAsync(user);
             Assert.NotNull(token);
-            manager.Options.Password.Validators.Add(new AlwaysBadValidator());
+            manager.PasswordValidators.Add(new AlwaysBadValidator());
             IdentityResultAssert.IsFailure(await manager.ResetPasswordAsync(user, token, newPassword),
                 AlwaysBadValidator.ErrorMessage);
             Assert.True(await manager.CheckPasswordAsync(user, password));

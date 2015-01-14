@@ -36,9 +36,12 @@ namespace Microsoft.AspNet.Identity
         /// <param name="tokenProviders"></param>
         /// <param name="msgProviders"></param>
         public UserManager(IUserStore<TUser> store, 
-            IOptions<IdentityOptions<TUser>> optionsAccessor = null,
-            IEnumerable<IUserTokenProvider<TUser>> tokenProviders = null, 
-            IEnumerable<IIdentityMessageProvider> msgProviders = null)
+            IOptions<IdentityOptions<TUser>> optionsAccessor,
+            IEnumerable<IUserValidator<TUser>> userValidators,
+            IEnumerable<IPasswordValidator<TUser>> passwordValidators,
+            IdentityErrorDescriber errors,
+            IEnumerable<IUserTokenProvider<TUser>> tokenProviders, 
+            IEnumerable<IIdentityMessageProvider> msgProviders)
         {
             if (store == null)
             {
@@ -46,6 +49,21 @@ namespace Microsoft.AspNet.Identity
             }
             Store = store;
             Options = optionsAccessor?.Options ?? new IdentityOptions<TUser>();
+            ErrorDescriber = errors ?? new IdentityErrorDescriber();
+            if (userValidators != null)
+            {
+                foreach (var v in userValidators)
+                {
+                    UserValidators.Add(v);
+                }
+            }
+            if (passwordValidators != null)
+            {
+                foreach (var v in passwordValidators)
+                {
+                    PasswordValidators.Add(v);
+                }
+            }
             if (tokenProviders != null)
             {
                 foreach (var tokenProvider in tokenProviders)
@@ -77,12 +95,12 @@ namespace Microsoft.AspNet.Identity
         /// <summary>
         ///     Used to validate users before persisting changes
         /// </summary>
-        private IList<IUserValidator<TUser>> UserValidators { get { return Options.User.Validators; } }
+        internal IList<IUserValidator<TUser>> UserValidators { get; } = new List<IUserValidator<TUser>>();
 
         /// <summary>
         ///     Used to validate passwords before persisting changes
         /// </summary>
-        private IList<IPasswordValidator<TUser>> PasswordValidators { get { return Options.Password.Validators; } }
+        internal IList<IPasswordValidator<TUser>> PasswordValidators { get; } = new List<IPasswordValidator<TUser>>();
 
         /// <summary>
         ///     Used to normalize user names and emails for uniqueness
@@ -92,25 +110,9 @@ namespace Microsoft.AspNet.Identity
         /// <summary>
         ///     Used to generate public API error messages
         /// </summary>
-        private IdentityErrorDescriber ErrorDescriber { get { return Options.ErrorDescriber; } }
+        internal IdentityErrorDescriber ErrorDescriber { get; set; }
 
-        public IdentityOptions<TUser> Options
-        {
-            get
-            {
-                ThrowIfDisposed();
-                return _options;
-            }
-            set
-            {
-                ThrowIfDisposed();
-                if (value == null)
-                {
-                    throw new ArgumentNullException("value");
-                }
-                _options = value;
-            }
-        }
+        public IdentityOptions<TUser> Options { get; internal set; }
 
         /// <summary>
         ///     Returns true if the store is an IUserTwoFactorStore

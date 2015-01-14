@@ -12,7 +12,7 @@ namespace Microsoft.AspNet.Identity
     {
         public ClaimsIdentityOptions ClaimsIdentity { get; set; } = new ClaimsIdentityOptions();
 
-        public UserOptions<TUser> User { get; set; } = new UserOptions<TUser>();
+        public UserOptions User { get; set; } = new UserOptions();
 
         public PasswordOptions<TUser> Password { get; set; } = new PasswordOptions<TUser>();
 
@@ -32,12 +32,6 @@ namespace Microsoft.AspNet.Identity
         ///     Used to normalize user names and emails for uniqueness
         /// </summary>
         public ILookupNormalizer KeyNormalizer { get; set; } = new UpperInvariantLookupNormalizer();
-
-        /// <summary>
-        ///     Used to generate public API error messages
-        /// </summary>
-        public IdentityErrorDescriber ErrorDescriber { get; set; } = new IdentityErrorDescriber();
-
 
         public static string ApplicationCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".Application";
         public static string ExternalCookieAuthenticationType { get; set; } = typeof(IdentityUser).Namespace + ".External";

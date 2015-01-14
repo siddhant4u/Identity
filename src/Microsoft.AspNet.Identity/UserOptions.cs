@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.AspNet.Identity
 {
-    public class UserOptions<TUser> where TUser : class
+    public class UserOptions
     {
         public string UserNameValidationRegex { get; set; } = "^[a-zA-Z0-9@_\\.]+$";
 
@@ -13,7 +13,5 @@ namespace Microsoft.AspNet.Identity
         ///     If set, enforces that emails are non empty, valid, and unique
         /// </summary>
         public bool RequireUniqueEmail { get; set; }
-
-        public IList<IUserValidator<TUser>> Validators { get; } = new List<IUserValidator<TUser>>();
     }
 }

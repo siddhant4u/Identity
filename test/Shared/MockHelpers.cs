@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Framework.OptionsModel;
@@ -14,9 +15,17 @@ namespace Microsoft.AspNet.Identity.Test
         public static Mock<UserManager<TUser>> MockUserManager<TUser>() where TUser : class
         {
             var store = new Mock<IUserStore<TUser>>();
-            var mgr = new Mock<UserManager<TUser>>(store.Object, null, null, null);
-            mgr.Object.Options.User.Validators.Add(new UserValidator<TUser>());
-            mgr.Object.Options.Password.Validators.Add(new PasswordValidator<TUser>());
+            var options = new Mock<IOptions<IdentityOptions<TUser>>>();
+            options.Setup(o => o.Options).Returns(new IdentityOptions<TUser>());
+            var mgr = new Mock<UserManager<TUser>>(store.Object, options.Object,
+                Enumerable.Empty<IUserValidator<TUser>>(),
+                Enumerable.Empty<IPasswordValidator<TUser>>(),
+                new IdentityErrorDescriber(),
+                Enumerable.Empty<IUserTokenProvider<TUser>>(),
+                Enumerable.Empty<IIdentityMessageProvider>());
+
+            mgr.Object.UserValidators.Add(new UserValidator<TUser>());
+            mgr.Object.PasswordValidators.Add(new PasswordValidator<TUser>());
             return mgr;
         }
 
@@ -32,9 +41,16 @@ namespace Microsoft.AspNet.Identity.Test
         {
             store = store ?? new Mock<IUserStore<TUser>>().Object;
             var validator = new Mock<IUserValidator<TUser>>();
-            var userManager = new UserManager<TUser>(store);
-            userManager.Options.User.Validators.Add(validator.Object);
-            userManager.Options.Password.Validators.Add(new PasswordValidator<TUser>());
+            var options = new Mock<IOptions<IdentityOptions<TUser>>>();
+            options.Setup(o => o.Options).Returns(new IdentityOptions<TUser>());
+            var userManager = new UserManager<TUser>(store, options.Object,
+                Enumerable.Empty<IUserValidator<TUser>>(),
+                Enumerable.Empty<IPasswordValidator<TUser>>(),
+                new IdentityErrorDescriber(),
+                Enumerable.Empty<IUserTokenProvider<TUser>>(),
+                Enumerable.Empty<IIdentityMessageProvider>());
+            userManager.UserValidators.Add(validator.Object);
+            userManager.PasswordValidators.Add(new PasswordValidator<TUser>());
             validator.Setup(v => v.ValidateAsync(userManager, It.IsAny<TUser>(), CancellationToken.None))
                 .Returns(Task.FromResult(IdentityResult.Success)).Verifiable();
             return userManager;

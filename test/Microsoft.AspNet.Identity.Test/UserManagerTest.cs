@@ -20,7 +20,7 @@ namespace Microsoft.AspNet.Identity.Test
         {
             public IUserStore<TestUser> StorePublic { get { return Store; } }
 
-            public TestManager(IUserStore<TestUser> store) : base(store) { }
+            public TestManager(IUserStore<TestUser> store) : base(store, null, null, null, null, null, null) { }
         }
 
         [Fact]
@@ -32,7 +32,6 @@ namespace Microsoft.AspNet.Identity.Test
             services.AddIdentity<TestUser, IdentityRole>();
             var manager = services.BuildServiceProvider().GetRequiredService<TestManager>();
             Assert.NotNull(manager.StorePublic);
-            Assert.NotNull(manager.Options);
         }
 
         [Fact]
@@ -44,7 +43,7 @@ namespace Microsoft.AspNet.Identity.Test
             store.Setup(s => s.CreateAsync(user, CancellationToken.None)).ReturnsAsync(IdentityResult.Success).Verifiable();
             store.Setup(s => s.GetUserNameAsync(user, CancellationToken.None)).Returns(Task.FromResult(user.UserName)).Verifiable();
             store.Setup(s => s.SetNormalizedUserNameAsync(user, user.UserName.ToUpperInvariant(), CancellationToken.None)).Returns(Task.FromResult(0)).Verifiable();
-            var userManager = MockHelpers.TestUserManager<TestUser>(store.Object);
+            var userManager = MockHelpers.TestUserManager(store.Object);
 
             // Act
             var result = await userManager.CreateAsync(user);
@@ -629,8 +628,8 @@ namespace Microsoft.AspNet.Identity.Test
         {
             // TODO: Can switch to Mock eventually
             var manager = MockHelpers.TestUserManager(new EmptyStore());
-            manager.Options.Password.Validators.Clear();
-            manager.Options.Password.Validators.Add(new BadPasswordValidator<TestUser>());
+            manager.PasswordValidators.Clear();
+            manager.PasswordValidators.Add(new BadPasswordValidator<TestUser>());
             IdentityResultAssert.IsFailure(await manager.CreateAsync(new TestUser(), "password"),
                 BadPasswordValidator<TestUser>.ErrorMessage);
         }
@@ -641,11 +640,10 @@ namespace Microsoft.AspNet.Identity.Test
             var store = new NotImplementedStore();
 
             Assert.Throws<ArgumentNullException>("store",
-                () => new UserManager<TestUser>(null));
+                () => new UserManager<TestUser>(null, null, null, null, null, null, null));
 
-            var manager = new UserManager<TestUser>(store);
+            var manager = new UserManager<TestUser>(store, null, null, null, null, null, null);
 
-            Assert.Throws<ArgumentNullException>("value", () => manager.Options = null);
             await Assert.ThrowsAsync<ArgumentNullException>("user", async () => await manager.CreateAsync(null));
             await Assert.ThrowsAsync<ArgumentNullException>("user", async () => await manager.CreateAsync(null, null));
             await
@@ -1372,6 +1370,7 @@ namespace Microsoft.AspNet.Identity.Test
             var manager = services.BuildServiceProvider().GetRequiredService<UserManager<TestUser>>();
 
             manager.Options.User.RequireUniqueEmail = true;
+            manager.ErrorDescriber = describer;
             var user = new TestUser() { UserName = "dupeEmail", Email = "dupe@email.com" };
             var user2 = new TestUser() { UserName = "dupeEmail2", Email = "dupe@email.com" };
             store.Setup(s => s.FindByEmailAsync("DUPE@EMAIL.COM", CancellationToken.None))
@@ -1387,7 +1386,7 @@ namespace Microsoft.AspNet.Identity.Test
                 .Returns(Task.FromResult(user.Email))
                 .Verifiable();
 
-            Assert.Same(describer, manager.Options.ErrorDescriber);
+            Assert.Same(describer, manager.ErrorDescriber);
             IdentityResultAssert.IsFailure(await manager.CreateAsync(user), describer.DuplicateEmail(user.Email));
 
             store.VerifyAll();

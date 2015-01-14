@@ -33,8 +33,5 @@ namespace Microsoft.AspNet.Identity
         public bool RequireDigit { get; set; } = true;
 
         public IPasswordHasher<TUser> Hasher { get; set; } = new PasswordHasher<TUser>();
-
-        public IList<IPasswordValidator<TUser>> Validators { get; } = new List<IPasswordValidator<TUser>>();
-
     }
 }
