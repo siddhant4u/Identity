@@ -2,9 +2,9 @@
 using System.Security.Principal;
 using System.Threading.Tasks;
 using IdentitySample.Models;
+using Microsoft.AspNet.Authorization;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Security;
 
 namespace IdentitySample
 {
